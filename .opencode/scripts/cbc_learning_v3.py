@@ -193,6 +193,17 @@ def review(args):
         db.execute("UPDATE episodes SET review=? WHERE id=?",("approved" if args.decision=="approve" else "rejected",args.id))
     print(args.decision.upper(),args.id)
 
+def reclassify(args):
+    """After human review, make an unverified legacy hypothesis eligible for retesting."""
+    if not args.confirm:
+        raise ValueError("Reclassification requires human --confirm")
+    with database() as db:
+        row = one(db,"episodes",args.id)
+        if row["review"] != "pending" or row["verified"] or row["outcome"] != "unknown":
+            raise ValueError("Only pending, unverified, unknown episodes can be reclassified")
+        db.execute("UPDATE episodes SET outcome=? WHERE id=?", (args.outcome,args.id))
+    print("RECLASSIFIED_PENDING_UNVERIFIED",args.id,args.outcome)
+
 def add_feedback(args):
     evidence = clean(args.evidence,"evidence",250)
     with database() as db:
@@ -520,6 +531,9 @@ def build_parser():
     p=sub.add_parser("review")
     p.add_argument("--id",required=True);p.add_argument("--decision",choices=("approve","reject"),required=True)
     p.add_argument("--confirm",action="store_true");p.set_defaults(func=review)
+    p=sub.add_parser("reclassify",help="Human-review an unknown imported lesson before a new test")
+    p.add_argument("--id",required=True);p.add_argument("--outcome",choices=("success","failed"),required=True)
+    p.add_argument("--confirm",action="store_true");p.set_defaults(func=reclassify)
     p=sub.add_parser("feedback")
     p.add_argument("--id",required=True);p.add_argument("--outcome",choices=("helpful","harmful","neutral"),required=True)
     p.add_argument("--evidence",required=True);p.set_defaults(func=add_feedback)
