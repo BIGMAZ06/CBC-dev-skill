@@ -19,7 +19,7 @@ PROJECT = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{1,48}$")
 SECRET = re.compile(
     r"(?:nvapi-[\w-]{8,}|sk-[\w-]{12,}|gh[opusr]_[\w-]{12,}|"
     r"AIza[\w-]{18,}|-----BEGIN .*PRIVATE KEY-----|"
-    r"Bearer\s+\S+|(?:password|api[_-]?key|access[_-]?token)\s*[:=]\s*\S+)", re.I)
+    r"Bearer\s+\S+|(?:password|api[\s_-]?key|access[\s_-]?token)\s*[:=]\s*\S+)", re.I)
 PRESETS = {
     "python-unittest": ["python3", "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py", "-v"],
     "git-diff-check": ["git", "diff", "--check"],
