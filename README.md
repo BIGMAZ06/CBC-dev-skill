@@ -89,6 +89,20 @@ python3 .opencode/scripts/cbc_learning_v3.py migrate --file /path/to/legacy.json
 
 Accepts bounded JSON arrays, or objects with `lessons`, `entries`, or `records` arrays. Unknown and unsafe records are skipped. **Every imported record stays pending and unverified**, regardless of legacy status. The source file is unchanged. The format is deliberately conservative; different V2 schemas may need an explicit reviewed converter, not assumptions.
 
+## Offline encrypted? No — private portable ZIP only
+
+Back up **only the local V3 memory** (not API keys, OpenCode providers or project source files):
+
+```sh
+python3 .opencode/scripts/cbc_learning_v3.py backup --out /private/path/cbc-learning-v3.zip
+# Copy the ZIP by a secure method to the new device, then use an EMPTY state directory:
+CBC_LEARNING_HOME=/private/empty-state \
+  python3 .opencode/scripts/cbc_learning_v3.py restore \
+  --file /private/path/cbc-learning-v3.zip --confirm
+```
+
+The ZIP contains one SQLite snapshot and a SHA-256 integrity manifest. **SHA-256 does not authenticate the source** and the ZIP is **not encrypted**; store/transfer it privately. Restore refuses an existing database, validates the expected format, checks the SQLite structure, rejects extra entries and never extracts arbitrary paths. Reinstall the toolkit separately on another device.
+
 ## Verification
 
 ```sh
