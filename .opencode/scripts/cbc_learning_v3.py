@@ -280,7 +280,7 @@ def draft(args):
     with database() as db:
         rows=db.execute("""SELECT * FROM episodes WHERE project=? AND pattern=?
           AND review='approved' AND verified=1 ORDER BY created DESC""",(p,pat)).fetchall()
-        distinct={r["task"].strip().casefold():r for r in rows}
+        distinct={r["task"].strip().casefold():r for r in rows if score(db,r["id"])[1] < 2}
         if len(distinct)<3:
             raise ValueError("Need 3 independently reviewed, passing, distinct-task lessons")
         version=db.execute("SELECT COALESCE(MAX(version),0)+1 FROM candidates WHERE project=? AND pattern=?",(p,pat)).fetchone()[0]
