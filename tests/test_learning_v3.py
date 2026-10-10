@@ -115,6 +115,22 @@ class V3Test(unittest.TestCase):
             self.assertEqual(bad,1)
             self.assertAlmostEqual(value,1/3)
 
+    def test_failed_episodes_visible_only_in_diagnostics(self):
+        failed=self.episode(44,outcome="failed")
+        status,out,_=self.call("diagnostics","--project","CBC","--pattern","preview-fix")
+        self.assertEqual(status,0)
+        self.assertIn(failed,out)
+        self.assertIn("hypothesis_not_verified",out)
+        self.assertIn("NO_APPROVED",self.call("recall","--project","CBC","--query","Root cause 44")[1])
+
+    def test_repeated_harmful_feedback_quarantines_approved_lesson(self):
+        eid=self.episode(9);self.check(eid);self.approve(eid)
+        for why in ("UI regression","Crashes after update"):
+            self.call("feedback","--id",eid,"--outcome","harmful","--evidence",why)
+        status,out,_=self.call("recall","--project","CBC","--query","Root cause 9")
+        self.assertEqual(status,0)
+        self.assertIn("NO_APPROVED_RELEVANT_LESSONS",out)
+
     def test_draft_requires_three_verified_approved_distinct_tasks(self):
         eid=self.episode(0);self.check(eid);self.approve(eid)
         self.assertEqual(self.call("draft","--project","CBC","--pattern","preview-fix")[0],2)
