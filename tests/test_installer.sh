@@ -12,6 +12,12 @@ test -f "$TMP/existing/.opencode/skills/cbc-learning/SKILL.md"
 sh "$ROOT/install.sh" "$TMP/project"
 test -f "$TMP/project/.opencode/scripts/cbc_learning_v3.py"
 test -f "$TMP/project/.opencode/skills/cbc-learning/SKILL.md"
+# After Python tests, __pycache__ may exist in the source; it must never be installed.
+if find "$TMP/project/.opencode" -type f \( -name '*.pyc' -o -name '*.pyo' \) | grep -q .; then
+    echo "FAIL: installer copied runtime Python bytecode" >&2
+    exit 1
+fi
+test ! -e "$TMP/project/.opencode/scripts/__pycache__"
 mkdir -p "$TMP/project/.opencode/task-state/learning-v3"
 echo 'PERSONAL LESSON' > "$TMP/project/.opencode/task-state/learning-v3/personal.json"
 echo '# private change' >> "$TMP/project/.opencode/commands/cbc-dev.md"
