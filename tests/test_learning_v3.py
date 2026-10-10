@@ -188,6 +188,35 @@ class V3Test(unittest.TestCase):
             self.assertEqual(tuple(row),("pending",0,"unknown"))
         self.assertIn("historical fix",legacy.read_text())
 
+    def test_portable_private_backup_restore_only_into_new_state(self):
+        eid=self.episode(8)
+        self.check(eid)
+        self.approve(eid)
+        target=self.root/"private-backup.zip"
+        self.assertEqual(self.call("backup","--out",str(target))[0],0)
+        self.assertEqual(target.stat().st_mode & 0o777,0o600)
+        self.assertEqual(self.call("backup","--out",str(target))[0],2)
+        # Restore cannot replace an existing learning database.
+        self.assertEqual(self.call("restore","--file",str(target),"--confirm")[0],2)
+        with patch.dict(os.environ,{"CBC_LEARNING_HOME":str(self.root/"restored-state")}):
+            self.assertEqual(self.call("restore","--file",str(target))[0],2)
+            self.assertEqual(self.call("restore","--file",str(target),"--confirm")[0],0)
+            self.assertEqual(self.call("restore","--file",str(target),"--confirm")[0],2)
+            out=self.call("recall","--project","CBC","--query","Root cause 8")[1]
+            self.assertIn("Validated solution 8",out)
+
+    def test_restore_rejects_modified_or_unexpected_zip(self):
+        import zipfile
+        path=self.root/"forged.zip"
+        with zipfile.ZipFile(path,"w") as z:
+            z.writestr("../malicious","x")
+            z.writestr("manifest.json",'{"format":"cbc-learning-v3","version":1,"sha256":"x"}')
+            z.writestr("learning.sqlite3",b"junk")
+        code,_,err=self.call("restore","--file",str(path),"--confirm")
+        self.assertEqual(code,2)
+        self.assertIn("Unexpected ZIP",err)
+        self.assertFalse(v3.db_file().exists())
+
     def test_invalid_legacy_and_no_implicit_shell(self):
         legacy=self.root/"bad.json"
         legacy.write_text('{"legacy": "unsupported"}')
