@@ -87,7 +87,7 @@ python3 .opencode/scripts/cbc_learning_v3.py migrate --file /path/to/legacy.json
 python3 .opencode/scripts/cbc_learning_v3.py migrate --file /path/to/legacy.json --apply --confirm
 ```
 
-Accepts bounded JSON arrays, or objects with `lessons`, `entries`, or `records` arrays. Unknown and unsafe records are skipped. **Every imported record stays pending and unverified**, regardless of legacy status. The source file is unchanged. The format is deliberately conservative; different V2 schemas may need an explicit reviewed converter, not assumptions.
+Accepts bounded JSON arrays, or objects with `lessons`, `entries`, or `records` arrays. Unknown and unsafe records are skipped. **Every imported record stays pending, unknown and unverified**, regardless of legacy status. The source file is unchanged. After separately inspecting the old case and current code, a human can mark an imported hypothesis for a *new* test: `reclassify --id IMPORTED_ID --outcome success --confirm`. Then run `verify` with a behavioral test and `review` after inspecting the result; old approval labels alone never grant trust. The format is deliberately conservative; different V2 schemas may need an explicit reviewed converter, not assumptions.
 
 ## Offline encrypted? No — private portable ZIP only
 
