@@ -5,7 +5,7 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 TARGET=$1
 [ -d "$TARGET" ] || { echo "Target project directory missing" >&2; exit 2; }
-(cd "$ROOT" && find .opencode -type d -name task-state -prune -o -type f -print | sort) |
+(cd "$ROOT" && find .opencode -type d \( -name task-state -o -name __pycache__ -o -name node_modules \) -prune -o -type f ! -name '*.pyc' ! -name '*.pyo' -print | sort) |
 while IFS= read -r relative; do
     if [ -f "$TARGET/$relative" ] && cmp -s "$ROOT/$relative" "$TARGET/$relative"; then
         rm "$TARGET/$relative"
