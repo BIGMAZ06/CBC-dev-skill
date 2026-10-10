@@ -229,6 +229,9 @@ def recall(args):
             if words and not overlap:
                 continue
             rating,bad = score(db,row["id"])
+            # Two independent harmful observations quarantine a once-useful lesson.
+            if bad >= 2:
+                continue
             scored.append((overlap+rating-bad*0.4,row))
         for _,row in sorted(scored,key=lambda z:z[0],reverse=True)[:args.limit]:
             rating,bad=score(db,row["id"])
@@ -237,6 +240,21 @@ def recall(args):
               "effectiveness":round(rating,2),"harmful_reports":bad},ensure_ascii=False))
         if not scored:
             print("NO_APPROVED_RELEVANT_LESSONS")
+
+def diagnostics(args):
+    p, pat = project(args.project), slug(args.pattern)
+    if not 1 <= args.limit <= 5:
+        raise ValueError("diagnostics limit must be between 1 and 5")
+    with database() as db:
+        rows = db.execute("""SELECT * FROM episodes WHERE project=? AND pattern=?
+           AND outcome IN ('failed','unknown') ORDER BY created DESC LIMIT ?""",
+           (p,pat,args.limit)).fetchall()
+        for row in rows:
+            print(json.dumps({"id":row["id"],"outcome":row["outcome"],
+              "problem":row["problem"],"hypothesis_not_verified":row["lesson"]},
+              ensure_ascii=False))
+        if not rows:
+            print("NO_DIAGNOSTIC_EXPERIENCES")
 
 def status(args):
     with database() as db:
@@ -437,6 +455,9 @@ def build_parser():
     p.add_argument("--project",required=True);p.add_argument("--query",default="")
     p.add_argument("--limit",type=int,default=3);p.set_defaults(func=recall)
     sub.add_parser("status").set_defaults(func=status)
+    p=sub.add_parser("diagnostics",help="Review untrusted failed/unknown experiences, never agent instructions")
+    p.add_argument("--project",required=True);p.add_argument("--pattern",required=True)
+    p.add_argument("--limit",type=int,default=3);p.set_defaults(func=diagnostics)
     p=sub.add_parser("draft")
     p.add_argument("--project",required=True);p.add_argument("--pattern",required=True);p.set_defaults(func=draft)
     p=sub.add_parser("evaluate")
