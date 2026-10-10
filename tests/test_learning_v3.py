@@ -184,8 +184,16 @@ class V3Test(unittest.TestCase):
         self.assertEqual(self.call("recall","--project","CBC","--query","documented")[1].strip(),
                          "NO_APPROVED_RELEVANT_LESSONS")
         with v3.database() as db:
-            row=db.execute("select review,verified,outcome from episodes").fetchone()
-            self.assertEqual(tuple(row),("pending",0,"unknown"))
+            row=db.execute("select id,review,verified,outcome from episodes").fetchone()
+            self.assertEqual(tuple(row)[1:],("pending",0,"unknown"))
+            imported_id=row["id"]
+        # Human can reclassify the old hypothesis, but still must execute a new behavioral test.
+        self.assertEqual(self.call("reclassify","--id",imported_id,"--outcome","success")[0],2)
+        self.assertEqual(self.call("reclassify","--id",imported_id,"--outcome","success","--confirm")[0],0)
+        self.assertEqual(self.approve(imported_id)[0],2)
+        self.assertEqual(self.check(imported_id)[0],0)
+        self.assertEqual(self.approve(imported_id)[0],0)
+        self.assertIn("historical fix",self.call("recall","--project","CBC","--query","historical fix")[1])
         self.assertIn("historical fix",legacy.read_text())
 
     def test_portable_private_backup_restore_only_into_new_state(self):
