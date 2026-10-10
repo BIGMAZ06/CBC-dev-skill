@@ -298,7 +298,7 @@ def draft(args):
         version=db.execute("SELECT COALESCE(MAX(version),0)+1 FROM candidates WHERE project=? AND pattern=?",(p,pat)).fetchone()[0]
         cid=ident()
         body=make_body(p,pat,list(distinct.values())[:8])
-        db.execute("INSERT INTO candidates VALUES(?,?,?,?,?,?,?,?)",
+        db.execute("INSERT INTO candidates VALUES(?,?,?,?,?,?,?)",
                    (cid,pat,p,version,body,"draft",now()))
     print("DRAFT",cid,"version",version,"review-only; not an installed skill")
 
