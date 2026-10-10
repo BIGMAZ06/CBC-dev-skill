@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import uuid
+import zipfile
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -432,6 +433,77 @@ def migrate(args):
             imported+=1
     print("IMPORTED_PENDING_UNVERIFIED",imported,"Source unchanged; test and approve separately")
 
+def backup(args):
+    """Portable private offline snapshot, without any provider keys or code files."""
+    destination=Path(args.out)
+    if destination.exists():
+        raise ValueError("Backup destination exists; refusing overwrite")
+    with database() as db, tempfile.TemporaryDirectory() as tmp:
+        source=Path(tmp)/"learning.sqlite3"
+        snapshot=sqlite3.connect(source)
+        try:
+            db.backup(snapshot)
+        finally:
+            snapshot.close()
+        payload=source.read_bytes()
+    if len(payload)>20_000_000:
+        raise ValueError("Memory snapshot larger than 20 MB; split or prune it first")
+    manifest={"format":"cbc-learning-v3","version":1,
+              "sha256":hashlib.sha256(payload).hexdigest()}
+    # ZIP itself is NOT encrypted; keep it in a private location.
+    previous=os.umask(0o077)
+    try:
+        with zipfile.ZipFile(destination,mode="x",compression=zipfile.ZIP_DEFLATED) as z:
+            z.writestr("manifest.json",json.dumps(manifest,sort_keys=True))
+            z.writestr("learning.sqlite3",payload)
+    finally:
+        os.umask(previous)
+    os.chmod(destination,0o600)
+    print("PRIVATE_BACKUP_CREATED",str(destination))
+
+def restore(args):
+    """Opt-in restore only to a NEW/EMPTY state location; no path extraction."""
+    if not args.confirm:
+        raise ValueError("Restore requires explicit human --confirm")
+    target=db_file()
+    if target.exists():
+        raise ValueError("State database already exists. Restore into an empty CBC_LEARNING_HOME")
+    with zipfile.ZipFile(args.file,"r") as z:
+        files=z.namelist()
+        if sorted(files)!=["learning.sqlite3","manifest.json"]:
+            raise ValueError("Unexpected ZIP members; refusing archive")
+        if any(z.getinfo(name).file_size>20_000_000 for name in files):
+            raise ValueError("Archive member exceeds 20 MB")
+        manifest=json.loads(z.read("manifest.json"))
+        if manifest.get("format")!="cbc-learning-v3" or manifest.get("version")!=1:
+            raise ValueError("Unsupported backup version")
+        payload=z.read("learning.sqlite3")
+        if hashlib.sha256(payload).hexdigest()!=manifest.get("sha256"):
+            raise ValueError("Backup digest mismatch")
+    target.parent.mkdir(parents=True,exist_ok=True,mode=0o700)
+    os.chmod(target.parent,0o700)
+    fd,tmp=tempfile.mkstemp(prefix=".cbc-restore-",dir=str(target.parent))
+    try:
+        with os.fdopen(fd,"wb") as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        test=sqlite3.connect(tmp)
+        try:
+            valid=test.execute("PRAGMA quick_check").fetchone()[0]
+            tables={x[0] for x in test.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+            if valid!="ok" or not {"episodes","checks","feedback","candidates","evaluations"}.issubset(tables):
+                raise ValueError("Invalid CBC Learning V3 backup database")
+        finally:
+            test.close()
+        os.chmod(tmp,0o600)
+        # Exclusive link refuses overwrite even if another process creates target now.
+        os.link(tmp,target)
+        print("RESTORED_INTO_NEW_STATE",str(target))
+    finally:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+
 def build_parser():
     parser=argparse.ArgumentParser(description=__doc__)
     sub=parser.add_subparsers(dest="action",required=True)
@@ -471,6 +543,11 @@ def build_parser():
     p.add_argument("--candidate",required=True);p.add_argument("--confirm",action="store_true");p.set_defaults(func=publish)
     p=sub.add_parser("rollback")
     p.add_argument("--candidate",required=True);p.add_argument("--confirm",action="store_true");p.set_defaults(func=rollback)
+    p=sub.add_parser("backup")
+    p.add_argument("--out",required=True);p.set_defaults(func=backup)
+    p=sub.add_parser("restore")
+    p.add_argument("--file",required=True);p.add_argument("--confirm",action="store_true")
+    p.set_defaults(func=restore)
     p=sub.add_parser("migrate")
     p.add_argument("--file",required=True);p.add_argument("--apply",action="store_true")
     p.add_argument("--confirm",action="store_true");p.set_defaults(func=migrate)
