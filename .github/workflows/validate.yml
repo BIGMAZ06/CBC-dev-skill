@@ -1,0 +1,23 @@
+name: Validate CBC Learning V3
+on:
+  push:
+  pull_request:
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python3 -m py_compile .opencode/scripts/cbc_learning_v3.py
+      - run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+      - run: sh -n install.sh && sh -n uninstall.sh
+      - run: sh tests/test_installer.sh
+      - name: Ensure no private runtime DB is committed
+        run: |
+          ! git ls-files | grep -E '(^|/)task-state/|\.sqlite3?(-wal|-shm)?$'
+          test -f .opencode/skills/cbc-learning/SKILL.md
+          test -f .opencode/commands/cbc-learn.md
