@@ -170,8 +170,10 @@ def run_check(args):
         db.execute("INSERT INTO checks VALUES(?,?,?,?,?,?)",
                    (ident(), args.id, args.preset, rc, digest, now()))
         # A green test is only evidence for a recorded success, never for a failed experiment.
-        if rc == 0 and episode["outcome"] == "success":
-            db.execute("UPDATE episodes SET verified=1 WHERE id=?", (args.id,))
+        # Formatting checks alone do NOT verify a behavioral fix.
+        behavioral = args.preset in ("python-unittest", "npm-test")
+        db.execute("UPDATE episodes SET verified=? WHERE id=?",
+                   (int(rc == 0 and behavioral and episode["outcome"] == "success"), args.id))
     print("CHECK",args.preset,"exit=",rc,"output_sha256=",digest)
     if rc:
         print("Check did not pass; approval remains blocked")
