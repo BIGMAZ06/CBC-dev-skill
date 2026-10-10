@@ -7,7 +7,7 @@ TARGET=$1
 [ -d "$TARGET" ] || { echo "Target project directory missing: $TARGET" >&2; exit 2; }
 FILES=$(mktemp)
 trap 'rm -f "$FILES"' EXIT HUP INT TERM
-(cd "$ROOT" && find .opencode -type d -name task-state -prune -o -type f -print | sort) > "$FILES"
+(cd "$ROOT" && find .opencode -type d \( -name task-state -o -name __pycache__ -o -name node_modules \) -prune -o -type f ! -name '*.pyc' ! -name '*.pyo' -print | sort) > "$FILES"
 # Atomic-ish preflight: all conflicts checked before the first copy.
 while IFS= read -r relative; do
     if [ -e "$TARGET/$relative" ]; then
