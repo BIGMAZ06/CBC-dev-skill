@@ -118,7 +118,10 @@ class V3Test(unittest.TestCase):
     def test_draft_requires_three_verified_approved_distinct_tasks(self):
         eid=self.episode(0);self.check(eid);self.approve(eid)
         self.assertEqual(self.call("draft","--project","CBC","--pattern","preview-fix")[0],2)
-        self.seed_three()
+        for i in (1,2):
+            other=self.episode(i)
+            self.check(other)
+            self.approve(other)
         cid=self.draft()
         with v3.database() as db:
             c=v3.one(db,"candidates",cid)
