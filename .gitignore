@@ -1,0 +1,8 @@
+# Local-only learning and agent state (never commit private lessons)
+.opencode/task-state/
+**/__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+.DS_Store
