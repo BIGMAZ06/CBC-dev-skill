@@ -47,6 +47,7 @@ def probe(model, timeout=45, runner=subprocess.run):
         result = runner(
             ["opencode", "run", "--model", model, PROMPT],
             capture_output=True, text=True, timeout=timeout, check=False,
+            stdin=subprocess.DEVNULL,  # Avoid OpenCode waiting for stdin EOF in headless runs.
         )
     except subprocess.TimeoutExpired:
         return {"status": "timeout", "model": model}

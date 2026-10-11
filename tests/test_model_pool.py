@@ -38,6 +38,7 @@ class ModelPoolTests(unittest.TestCase):
         self.assertEqual(called[0][0][:4],
                          ["opencode", "run", "--model", "nvidia/z-ai/glm-5.3"])
         self.assertNotIn("shell", called[0][1])
+        self.assertEqual(called[0][1]["stdin"], subprocess.DEVNULL)
 
     def test_wrong_answer_is_not_success(self):
         self.assertEqual(pool.probe("google/gemini-3.8-flash",
