@@ -1,0 +1,127 @@
+{
+  "schema": 1,
+  "description": "CBC model candidates as observed from OpenCode CLI. Visibility is not permission, free entitlement, reliability, or coding quality.",
+  "provider_notes": {
+    "google": "Free-tier project confirmed by user; actual per-model rate limits and coding quality not yet verified.",
+    "groq": "Credential configured and model IDs listed; actual limits and quality unverified.",
+    "openrouter": "Only explicit :free IDs included. Their availability and quotas may change.",
+    "opencode": "Only IDs ending in -free included. Limited/promotional capacity is not guaranteed.",
+    "nvidia": "Provider was used for a real task and returned a result, but it was incorrect. Execution observed; model identity and engineering quality unverified."
+  },
+  "candidates": [
+    {
+      "id": "google/gemini-3.8-flash",
+      "role": "coding",
+      "tier": "documented_free_tier",
+      "verified_for_autonomy": false
+    },
+    {
+      "id": "google/gemini-3.6-flash",
+      "role": "coding",
+      "tier": "documented_free_tier",
+      "verified_for_autonomy": false
+    },
+    {
+      "id": "google/gemini-2.5-pro",
+      "role": "architecture",
+      "tier": "documented_free_tier",
+      "verified_for_autonomy": false
+    },
+    {
+      "id": "google/gemini-3.5-flash-lite",
+      "role": "triage",
+      "tier": "documented_free_tier",
+      "verified_for_autonomy": false
+    },
+    {
+      "id": "google/gemini-3.1-flash-lite",
+      "role": "triage",
+      "tier": "documented_free_tier",
+      "verified_for_autonomy": false
+    },
+    {
+      "id": "groq/openai/gpt-oss-120b",
+      "role": "debugging",
+      "tier": "free_tier_unverified",
+      "verified_for_autonomy": false
+    },
+    {
+      "id": "groq/qwen/qwen3.8-27b",
+      "role": "coding",
+      "tier": "free_tier_unverified",
+      "verified_for_autonomy": false
+    },
+    {
+      "id": "groq/llama-3.3-70b-versatile",
+      "role": "review",
+      "tier": "free_tier_unverified",
+      "verified_for_autonomy": false
+    },
+    {
+      "id": "openrouter/cohere/north-mini-code:free",
+      "role": "coding",
+      "tier": "free_labeled",
+      "verified_for_autonomy": false
+    },
+    {
+      "id": "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+      "role": "review",
+      "tier": "free_labeled",
+      "verified_for_autonomy": false
+    },
+    {
+      "id": "openrouter/nvidia/nemotron-3-ultra-550b-a55b:free",
+      "role": "architecture",
+      "tier": "free_labeled",
+      "verified_for_autonomy": false
+    },
+    {
+      "id": "openrouter/poolside/laguna-s-2.1:free",
+      "role": "coding",
+      "tier": "free_labeled",
+      "verified_for_autonomy": false
+    },
+    {
+      "id": "opencode/mimo-v2.6-flash-free",
+      "role": "coding",
+      "tier": "free_labeled",
+      "verified_for_autonomy": false
+    },
+    {
+      "id": "opencode/nemotron-3-ultra-free",
+      "role": "architecture",
+      "tier": "free_labeled",
+      "verified_for_autonomy": false
+    },
+    {
+      "id": "opencode/ling-3.1-flash-free",
+      "role": "review",
+      "tier": "free_labeled",
+      "verified_for_autonomy": false
+    },
+    {
+      "id": "opencode/nemotron-3.5-lightning-free",
+      "role": "coding",
+      "tier": "free_labeled",
+      "verified_for_autonomy": false
+    },
+    {
+      "id": "nvidia/nvidia/nemotron-3-super-120b-a12b",
+      "role": "coding",
+      "tier": "access_unverified",
+      "verified_for_autonomy": false
+    },
+    {
+      "id": "nvidia/z-ai/glm-5.3",
+      "role": "architecture",
+      "tier": "access_unverified",
+      "verified_for_autonomy": false
+    },
+    {
+      "id": "nvidia/nvidia/nemotron-3.5-lightning-30b-a3b",
+      "role": "triage",
+      "tier": "access_unverified",
+      "verified_for_autonomy": false
+    }
+  ]
+}
